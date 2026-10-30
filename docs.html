@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Documentación de la API de ventas: consulta consolidada, consulta por ID y registro de ventas.">
+    <title>Documentación | API de Ventas</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #172033;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --surface: #ffffff;
+            --canvas: #f5f7fb;
+            --accent: #2563eb;
+            --code: #101827;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--canvas);
+            color: var(--ink);
+            font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        header {
+            padding: 48px max(24px, calc((100% - 1040px) / 2));
+            background: #101827;
+            color: #fff;
+        }
+
+        header p { max-width: 700px; margin-bottom: 0; color: #cbd5e1; }
+        h1 { margin: 0; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; }
+        h2 { margin-top: 0; font-size: 1.45rem; }
+        h3 { margin-bottom: 8px; font-size: 1.08rem; }
+        main { width: min(100% - 32px, 1040px); margin: 32px auto 64px; }
+        section, .endpoint {
+            margin-bottom: 20px;
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface);
+            box-shadow: 0 2px 8px rgb(15 23 42 / 4%);
+        }
+
+        .base-url {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #1e293b;
+            color: #e2e8f0;
+            overflow-wrap: anywhere;
+        }
+
+        .method {
+            display: inline-block;
+            margin-right: 8px;
+            padding: 2px 9px;
+            border-radius: 5px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: .82rem;
+            font-weight: 750;
+        }
+
+        .method.post { background: #dcfce7; color: #15803d; }
+        .route { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 650; }
+        .muted, .note { color: var(--muted); }
+        .note { padding-left: 14px; border-left: 3px solid #f59e0b; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+        th { color: #475569; font-size: .9rem; }
+        td code, p code { color: #1d4ed8; }
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            border-radius: 8px;
+            background: var(--code);
+            color: #e2e8f0;
+            font: .9rem/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+        }
+
+        @media (max-width: 600px) {
+            header { padding: 36px 20px; }
+            section, .endpoint { padding: 18px; }
+            table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>API de Ventas</h1>
+        <p>Referencia para consultar ventas y registrar nuevas operaciones. Todas las respuestas se envían en formato JSON.</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Inicio rápido</h2>
+            <p>En desarrollo, el servidor escucha en el puerto <code>3000</code> de forma predeterminada. Si se configura la variable de entorno <code>PORT</code>, se utiliza ese puerto.</p>
+            <p>URL base:</p>
+            <p><code class="base-url">http://localhost:3000/api/v1/ventas</code></p>
+            <p>La API no configura autenticación. Para consumirla desde otro entorno, reemplaza <code>localhost:3000</code> por el host y puerto donde esté desplegado.</p>
+        </section>
+
+        <section>
+            <h2>Endpoints</h2>
+
+            <article class="endpoint">
+                <h3><span class="method">GET</span><span class="route">/consolidado</span></h3>
+                <p>Obtiene el consolidado de ventas de una sucursal para un año. Ambos parámetros son obligatorios.</p>
+                <table>
+                    <thead><tr><th>Parámetro</th><th>Ubicación</th><th>Requerido</th><th>Descripción</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>sucursal</code></td><td>Query</td><td>Sí</td><td>Sucursal a consultar; el valor aceptado depende de los datos de la base de datos.</td></tr>
+                        <tr><td><code>anio</code></td><td>Query</td><td>Sí</td><td>Año para el consolidado.</td></tr>
+                    </tbody>
+                </table>
+                <pre><code>curl "http://localhost:3000/api/v1/ventas/consolidado?sucursal=1&amp;anio=2025"</code></pre>
+                <p>Respuesta <code>200 OK</code>:</p>
+                <pre><code>{
+  "status": "success",
+  "total_registros": 1,
+  "data": [
+    { "...": "Las columnas dependen del procedimiento almacenado" }
+  ]
+}</code></pre>
+                <p>Si falta algún parámetro, responde <code>400 Bad Request</code> con <code>{"error":"Bad Request","message":"Debe Enviar Ambos Parametros"}</code>.</p>
+            </article>
+
+            <article class="endpoint">
+                <h3><span class="method">GET</span><span class="route">/:id</span></h3>
+                <p>Busca una venta por su identificador.</p>
+                <table>
+                    <thead><tr><th>Parámetro</th><th>Ubicación</th><th>Requerido</th><th>Descripción</th></tr></thead>
+                    <tbody><tr><td><code>id</code></td><td>Ruta</td><td>Sí</td><td>Identificador numérico de la venta.</td></tr></tbody>
+                </table>
+                <pre><code>curl http://localhost:3000/api/v1/ventas/123</code></pre>
+                <p>Respuesta <code>200 OK</code>:</p>
+                <pre><code>{
+  "status": "success",
+  "data": { "...": "Columnas de la venta devuelta por la base de datos" }
+}</code></pre>
+                <p><code>400 Bad Request</code> si el ID no es numérico; <code>404 Not Found</code> si no existe una venta con ese ID.</p>
+            </article>
+
+            <article class="endpoint">
+                <h3><span class="method post">POST</span><span class="route">/consolidado</span></h3>
+                <p>Registra una venta. Envía un objeto JSON con todos los campos indicados.</p>
+                <table>
+                    <thead><tr><th>Campo</th><th>Tipo esperado</th><th>Requerido</th><th>Descripción</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>id_producto</code></td><td>Número</td><td>Sí</td><td>Identificador del producto.</td></tr>
+                        <tr><td><code>id_cliente</code></td><td>Número</td><td>Sí</td><td>Identificador del cliente.</td></tr>
+                        <tr><td><code>cantidad</code></td><td>Número</td><td>Sí</td><td>Cantidad vendida.</td></tr>
+                        <tr><td><code>fecha_venta</code></td><td>Cadena</td><td>Sí</td><td>Fecha de la venta. Se recomienda formato <code>YYYY-MM-DD</code>.</td></tr>
+                    </tbody>
+                </table>
+                <pre><code>curl -X POST http://localhost:3000/api/v1/ventas/consolidado \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id_producto": 10,
+    "id_cliente": 25,
+    "cantidad": 2,
+    "fecha_venta": "2025-03-08"
+  }'</code></pre>
+                <p>Respuesta <code>201 Created</code>:</p>
+                <pre><code>{
+  "status": "success",
+  "message": "Venta registrada exitosamente",
+  "datos_registrados": {
+    "id_producto": 10,
+    "id_cliente": 25,
+    "cantidad": 2,
+    "fecha_venta": "2025-03-08"
+  }
+}</code></pre>
+                <p>Si falta uno o más campos, responde <code>400 Bad Request</code>. Un error de base de datos responde <code>500 Internal Server Error</code>.</p>
+            </article>
+        </section>
+
+        <section>
+            <h2>Formato y errores</h2>
+            <ul>
+                <li>Para solicitudes POST, usa <code>Content-Type: application/json</code>.</li>
+                <li>Los errores se devuelven como JSON con las propiedades <code>error</code> y <code>message</code>.</li>
+                <li>Los valores posibles de sucursal, las columnas de salida y las restricciones de los datos dependen de la base de datos y de sus procedimientos almacenados.</li>
+                <li>La API no publica un endpoint de salud ni una especificación OpenAPI.</li>
+            </ul>
+            <p class="note">La documentación refleja los campos y códigos de respuesta definidos por el servidor. Verifica con el responsable de la base de datos los valores válidos y la estructura exacta de los resultados.</p>
+        </section>
+    </main>
+</body>
+</html>
